@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Orders</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/js/all.min.js"></script>
+    <style>
+      body {
+        background-color: #f4ecec;
+      }
+      .orders-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        background: #ffffff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand" href="index.html">ShopEase</a>
+        <a
+          class="nav-link dropdown-toggle"
+          href="#"
+          role="button"
+          data-bs-toggle="dropdown"
+          aria-expanded="false"
+          style="color: white"
+        >
+          Categories
+        </a>
+        <ul class="dropdown-menu" style="right: auto; left: auto">
+          <li>
+            <a class="dropdown-item" href="deco.html">Best Deals Today</a>
+          </li>
+          <li><a class="dropdown-item" href="Clothinh.html">Clothing</a></li>
+          <li>
+            <a class="dropdown-item" href="kitchen.html"
+              >Home and Kitchen Appliance</a
+            >
+          </li>
+          <li>
+            <a class="dropdown-item" href="head.html">Headphones and Earbuds</a>
+          </li>
+          <li><a class="dropdown-item" href="mobile.html">Mobiles</a></li>
+          <li>
+            <a class="dropdown-item" href="Acc.html"
+              >Computers and Accessories</a
+            >
+          </li>
+          <li>
+            <a class="dropdown-item" href="perfume.html"
+              >Deodorants and Perfumes</a
+            >
+          </li>
+          <li>
+            <a class="dropdown-item" href="Shoe.html">Trending Footwears</a>
+          </li>
+        </ul>
+        <div class="d-flex flex-grow-1">
+          <form class="d-flex ms-3 w-100" role="search">
+            <input
+              class="form-control me-2"
+              type="search"
+              placeholder="Search"
+              aria-label="Search"
+            />
+            <button class="btn btn-outline-success" type="submit">
+              Search
+            </button>
+          </form>
+        </div>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul
+            class="navbar-nav ms-auto align-items-center d-flex"
+            id="auth-section"
+          >
+            <li class="nav-item">
+              <a class="nav-link" href="login.html">Login</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="signup.html">Signup</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="orders-container">
+      <h2 class="text-center mb-4">My Orders</h2>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Product Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table">
+          <!-- Orders will be dynamically populated here -->
+        </tbody>
+      </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const authSection = document.getElementById("auth-section");
+        const user = JSON.parse(localStorage.getItem("user"));
+
+        if (!user || !user.email) {
+          alert("Please log in to view your orders.");
+          window.location.href = "login.html"; // Redirect to login
+          return;
+        }
+
+        // Add user info to nav
+        authSection.innerHTML = `
+         <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="${
+                          user.profilePicture || "/images/default-profile.png"
+                        }" alt="Profile" class="rounded-circle" width="30" height="30" style="margin-right: 8px;">
+                        <span>${user.email}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="profile.html">Profile</a></li>
+                        <li><a class="dropdown-item" href="#">Settings</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="#" id="logout-btn" style="color:red">Logout</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item ms-3">
+                    <a href="addtocart.html" class="btn btn-primary ms-3 d-flex align-items-center" id="add-to-cart">
+                        <i class="fas fa-shopping-cart me-2"></i>View Cart
+                    </a>
+                </li>
+      `;
+
+        // Handle logout
+        document.getElementById("logout-btn").addEventListener("click", () => {
+          localStorage.removeItem("user");
+          window.location.reload();
+        });
+
+        // Fetch and display user orders
+        fetch(`http://localhost:3000/orders/${user.email}`)
+          .then((response) => response.json())
+          .then((orders) => {
+            const ordersTable = document.getElementById("orders-table");
+            if (orders.length === 0) {
+              ordersTable.innerHTML =
+                '<tr><td colspan="4" class="text-center">No orders found.</td></tr>';
+              return;
+            }
+
+            orders.forEach((order) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+              <td>${order.product_name}</td>
+              <td>${order.quantity}</td>
+              <td>₹${order.price}</td>
+              <td>${new Date(order.date).toLocaleDateString()}</td>
+            `;
+              ordersTable.appendChild(tr);
+            });
+          })
+          .catch((error) => {
+            console.error("Error fetching orders:", error);
+            alert("Failed to load orders.");
+          });
+      });
+    </script>
+  </body>
+</html>
